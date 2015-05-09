@@ -45,7 +45,6 @@ public class ClientSocketHandler extends ClientIO implements Runnable {
 			try {
 				int bytesRead = 0;
 				while ((bytesRead = in.read(readBuffer)) != -1) {
-                    System.out.println("Bytes read " + bytesRead + " content " + Arrays.toString(readBuffer));
                     data = new String(readBuffer, 0, bytesRead);
 					logger.info("");
 					
