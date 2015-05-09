@@ -145,6 +145,6 @@ public class BattleshipGame extends Game {
     @Override
     protected void onStart() {
         String message = String.join(" ", shipModels.stream().map(ship -> ship.getModelString()).collect(Collectors.toList()));
-        send("CONF", message);
+        send("CONF", mapWidth + " " + mapHeight + " " + message);
     }
 }
