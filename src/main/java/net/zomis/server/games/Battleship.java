@@ -1,6 +1,8 @@
 package net.zomis.server.games;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by Simon on 5/9/2015.
@@ -59,7 +61,7 @@ public class Battleship {
     }
 
     public Battleship atPos(boolean flipped, int x, int y) {
-        return new Battleship(this.name, flipped ? width : height, flipped ? height : width,
+        return new Battleship(this.name, flipped ? height : width, flipped ? width : height,
                 x, y);
     }
 
@@ -89,20 +91,32 @@ public class Battleship {
         return healthLeft > 0;
     }
 
-    public boolean collidesWith(List<Battleship> ships) {
-        return ships.stream().anyMatch(ship -> this.collidesWith(ship));
+    public Optional<Battleship> collidesWith(List<Battleship> ships) {
+        return ships.stream().filter(ship -> this.collidesWith(ship)).findFirst();
     }
 
     private boolean collidesWith(Battleship ship) {
-        if (ship.x > x + width)
+        if (ship.x >= x + width)
             return false;
-        if (ship.y > y + height)
+        if (ship.y >= y + height)
             return false;
-        if (ship.x + ship.width < x)
+        if (ship.x + ship.width <= x)
             return false;
-        if (ship.y + ship.height < y)
+        if (ship.y + ship.height <= y)
             return false;
         return true;
     }
 
+    @Override
+    public String toString() {
+        return "Battleship{" +
+                "name='" + name + '\'' +
+                ", x=" + x +
+                ", y=" + y +
+                ", width=" + width +
+                ", height=" + height +
+//                ", sunk=" + Arrays.toString(sunk) +
+                ", healthLeft=" + healthLeft +
+                '}';
+    }
 }
