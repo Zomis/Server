@@ -37,11 +37,20 @@ public class BattleshipGame extends Game {
                 this.send("ERRR", "Player " + player + " has already placed the ships. Disqualified");
                 this.endGame();
             } else {
+                shipsChosen[player] = true;
                 placeShips(player, command);
+                if (shipsChosen[0] && shipsChosen[1]) {
+                    this.send("MOVE", "TURN " + currentPlayer);
+                } else {
+                    this.send("MOVE", "OK");
+                }
             }
             return true;
         }
-        if (command.getParameter(2).equals("MOVE")) {
+        if (command.getParameter(2).equals("PLAY")) {
+            if (!shipsChosen[0] || !shipsChosen[1]) {
+                this.send("ERRR", "Player " + player + " is making a move before opponent have placed ships. Disqualified");
+            }
             if (currentPlayer != player) {
                 this.send("ERRR", "Player " + player + " is not in turn to play. Disqualified");
                 this.endGame();
@@ -50,6 +59,7 @@ public class BattleshipGame extends Game {
                 this.send(command.getFullCommand() + " " + player + " " + (hit ? "HIT" : "MISS"));
                 if (!hit) {
                     currentPlayer = 1 - player;
+                    this.send("MOVE", "TURN " + currentPlayer);
                 }
             }
             return true;
