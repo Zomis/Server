@@ -66,7 +66,7 @@ public class Battleship {
     }
 
     public boolean inRange(int mapWidth, int mapHeight) {
-        return x >= 0 && y >= 0 && x + width < mapWidth && y + height < mapHeight;
+        return x >= 0 && y >= 0 && x + width <= mapWidth && y + height <= mapHeight;
     }
 
     public String getModelString() {
