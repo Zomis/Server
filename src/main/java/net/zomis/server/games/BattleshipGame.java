@@ -4,11 +4,9 @@ import net.zomis.server.model.Command;
 import net.zomis.server.model.Game;
 import net.zomis.server.model.Server;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class BattleshipGame extends Game {
 
@@ -55,11 +53,18 @@ public class BattleshipGame extends Game {
                 this.send("ERRR", "Player " + player + " is not in turn to play. Disqualified");
                 this.endGame();
             } else {
-                boolean hit = makeMove(player, command.getParameterInt(3), command.getParameterInt(4));
-                this.send(command.getFullCommand() + " " + player + " " + (hit ? "HIT" : "MISS"));
+                boolean hit = makeMove(command.getFullCommand(), player, command.getParameterInt(3), command.getParameterInt(4));
                 if (!hit) {
                     currentPlayer = 1 - player;
                     this.send("MOVE", "TURN " + currentPlayer);
+                }
+
+                int opponent = 1 - player;
+                List<Battleship> ships = playerShips.get(opponent);
+                if (ships.isEmpty()) {
+                    // All ships gone, player wins!
+                    this.send("GEND", "Player " + player + " wins!");
+                    this.endGame();
                 }
             }
             return true;
@@ -113,23 +118,26 @@ public class BattleshipGame extends Game {
         return true;
     }
 
-    private boolean makeMove(int player, int x, int y) {
+    private boolean makeMove(String fullCommand, int player, int x, int y) {
         int opponent = 1 - player;
         List<Battleship> ships = playerShips.get(opponent);
+        Stream<Battleship> sunkenShips = Stream.of();
         Iterator<Battleship> it = ships.iterator();
         boolean hit = false;
         while (it.hasNext()) {
             Battleship ship = it.next();
             hit = hit | ship.sink(x, y);
             if (!ship.isAlive()) {
+                sunkenShips = Stream.concat(sunkenShips, Stream.of(ship));
                 it.remove();
             }
         }
-        if (ships.isEmpty()) {
-            // All ships gone, player wins!
-            this.send("GEND", "Player " + player + " wins!");
-            this.endGame();
+        if (hit) {
+            this.send(fullCommand + " " + player + " " + (hit ? "HIT" : "MISS"));
         }
+        sunkenShips.forEach(ship -> send("MOVE", String.format(Locale.ENGLISH, "SINK %d %s %d %d %d %d", player,
+                ship.getName(), ship.getWidth(), ship.getHeight(), ship.getX(), ship.getY())));
+
         return hit;
     }
 
