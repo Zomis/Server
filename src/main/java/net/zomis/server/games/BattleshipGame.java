@@ -12,10 +12,10 @@ public class BattleshipGame extends Game {
 
     private final int mapWidth = 10;
     private final int mapHeight = 10;
-    private boolean shipsChosen[] = new boolean[2];
+    private final boolean shipsChosen[] = new boolean[2];
     private int currentPlayer;
-    private List<Battleship> shipModels = new ArrayList<>();
-    private List<List<Battleship>> playerShips = new ArrayList<>();
+    private final List<Battleship> shipModels = new ArrayList<>();
+    private final List<List<Battleship>> playerShips = new ArrayList<>();
 
     public BattleshipGame(Server server, int id) {
         super(server, id);
