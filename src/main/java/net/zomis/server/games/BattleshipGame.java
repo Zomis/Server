@@ -132,9 +132,7 @@ public class BattleshipGame extends Game {
                 it.remove();
             }
         }
-        if (hit) {
-            this.send(fullCommand + " " + player + " " + (hit ? "HIT" : "MISS"));
-        }
+        this.send(fullCommand + " " + player + " " + (hit ? "HIT" : "MISS"));
         sunkenShips.forEach(ship -> send("MOVE", String.format(Locale.ENGLISH, "SINK %d %s %d %d %d %d", player,
                 ship.getName(), ship.getWidth(), ship.getHeight(), ship.getX(), ship.getY())));
 
