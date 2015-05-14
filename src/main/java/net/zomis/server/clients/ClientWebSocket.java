@@ -39,6 +39,6 @@ public class ClientWebSocket extends ClientIO {
 	}
 
     public void transformAndHandle(byte[] data) {
-        transformer.read(null, data, this::sentToServer);
+        transformer.read(null, data, this::sentToServer, this::sentToServer);
     }
 }

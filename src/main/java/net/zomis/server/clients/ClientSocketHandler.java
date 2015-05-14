@@ -58,7 +58,7 @@ public class ClientSocketHandler extends ClientIO implements Runnable {
 	public void run() {
         logger.info("Started thread for " + this);
         try {
-            transformer.read(in, null, mess -> this.sentToServer(mess));
+            transformer.read(in, null, mess -> this.sentToServer(mess), mess -> this.sentToServer(mess));
         } catch (Exception ex) {
             logger.error("Error in " + this, ex);
         }

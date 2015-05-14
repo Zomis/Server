@@ -35,7 +35,7 @@ class FourCharTransform implements MessageTransformer {
     }
 
     @Override
-    void read(InputStream stream, byte[] bytes, Consumer<Message> handler) {
+    void read(InputStream stream, byte[] bytes, Consumer<Message> handler, Consumer<String> backupHandler) {
         char[] readBuffer = new char[4096];
         Reader reader = new BufferedReader(new InputStreamReader(stream));
         String data;
@@ -51,7 +51,12 @@ class FourCharTransform implements MessageTransformer {
                         continue;
                     }
 
-                    handler.accept(stringToMessage(mess));
+                    Message msg = stringToMessage(mess)
+                    if (msg) {
+                        handler.accept(msg);
+                    } else {
+                        backupHandler.accept(mess)
+                    }
                 }
             }
             logger.info("Socket Communication no more bytes to read for " + this.toString());

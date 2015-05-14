@@ -11,6 +11,6 @@ public interface MessageTransformer {
 
     void transform(Message message, Sender<byte[]> byteSender, Sender<String> stringSender);
 
-    void read(InputStream stream, byte[] bytes, Consumer<Message> handler);
+    void read(InputStream stream, byte[] bytes, Consumer<Message> handler, Consumer<String> backupHandler);
 
 }
