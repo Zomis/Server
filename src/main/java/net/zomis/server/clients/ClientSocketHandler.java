@@ -4,7 +4,6 @@ import java.io.*;
 import java.net.Socket;
 
 import net.zomis.server.messages.Message;
-import net.zomis.server.messtransform.FourCharTransformer;
 import net.zomis.server.messtransform.MessageTransformer;
 import net.zomis.server.model.Server;
 

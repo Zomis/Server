@@ -1,7 +1,6 @@
 package net.zomis.server.clients;
 
 import net.zomis.server.messages.Message;
-import net.zomis.server.messtransform.FourCharTransformer;
 import net.zomis.server.messtransform.MessageTransformer;
 import net.zomis.server.model.Server;
 
