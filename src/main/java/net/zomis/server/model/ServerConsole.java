@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 
 import net.zomis.server.clients.ClientIO;
 
+import net.zomis.server.messages.Message;
 import org.apache.log4j.LogManager;
 
 public class ServerConsole extends ClientIO implements Runnable {
@@ -41,6 +42,11 @@ public class ServerConsole extends ClientIO implements Runnable {
 	}
 
 	@Override
+    protected void onSend(Message data) {
+        System.out.println(String.valueOf(data));
+    }
+
+    @Override
 	public void sentToServer(String message) {
 		commands.handle(this.parseMessage(message));
 	}

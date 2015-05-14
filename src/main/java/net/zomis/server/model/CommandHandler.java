@@ -1,5 +1,8 @@
 package net.zomis.server.model;
 
+import net.zomis.server.clients.ClientIO;
+import net.zomis.server.messages.Message;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -7,14 +10,20 @@ import java.util.function.Consumer;
 public class CommandHandler {
 	
 	private final Map<String, Consumer<Command>> commands;
+    private final Map<Class<? extends Message>, MessageHandler<? extends Message>> commands2 = new ConcurrentHashMap<>();
 
 	public CommandHandler() {
 		this.commands = new ConcurrentHashMap<>();
 	}
 
-	public void addHandler(String command, Consumer<Command> handler) {
-		commands.put(command, handler);
-	}
+    @Deprecated
+    public void addHandler(String command, Consumer<Command> handler) {
+        commands.put(command, handler);
+    }
+
+    public <T extends Message> void addHandler(Class<T> command, MessageHandler<T> handler) {
+        commands2.put(command, handler);
+    }
 
 	public boolean handle(Command command) {
 		Consumer<Command> handler = commands.get(command.getCommand());
@@ -25,5 +34,16 @@ public class CommandHandler {
 	}
 	
 	
+    public <E extends Message> void handle(E message, ClientIO client) {
+        System.out.println("Handle " + message);
+        @SuppressWarnings("unchecked")
+        MessageHandler<E> messagePerform = (MessageHandler<E>) this.commands2.get(message.getClass());
+        if (messagePerform == null) {
+            System.out.println("NPE");
+            throw new NullPointerException("No handler for message " + message + " of class " + message.getClass());
+        }
+        messagePerform.handle(message, client);
+    }
+
 	
 }

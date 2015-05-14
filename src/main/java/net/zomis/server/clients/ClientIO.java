@@ -1,5 +1,6 @@
 package net.zomis.server.clients;
 
+import net.zomis.server.messages.Message;
 import net.zomis.server.model.Command;
 import net.zomis.server.model.Server;
 
@@ -31,17 +32,27 @@ public abstract class ClientIO {
 	 * 
 	 * @param data Message to send
 	 */
-	public final void sendToClient(String data) {
-		logger.debug("Send to " + this.name + ": " + data);
-		onSend(data);
-	}
-	
-	protected abstract void onSend(String data);
-	
-	public String getName() {
+    @Deprecated
+    public final void sendToClient(String data) {
+        logger.debug("Send to " + this.name + ": " + data);
+        onSend(data);
+    }
+
+    public final void sendToClient(Message data) {
+        logger.debug("Send to " + this.name + ": " + data);
+        onSend(data);
+    }
+
+    @Deprecated
+    protected abstract void onSend(String data);
+
+    protected abstract void onSend(Message data);
+
+    public String getName() {
 		return name;
 	}
 	
+    @Deprecated
 	public void sentToServer(String message) {
 		logger.debug("Incoming message from " + this.name + ": " + message);
 		server.handleMessage(this, message);
@@ -64,4 +75,8 @@ public abstract class ClientIO {
 		return isLoggedIn() ? "online" : "offline";
 	}
 	
+    public void sentToServer(Message mess) {
+        logger.info("Sent to server: " + mess);
+        server.handleMessage(this, mess);
+    }
 }

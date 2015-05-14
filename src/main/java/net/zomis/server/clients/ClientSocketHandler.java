@@ -1,12 +1,11 @@
 package net.zomis.server.clients;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
-import java.util.Arrays;
 
+import net.zomis.server.messages.Message;
+import net.zomis.server.messtransform.FourCharTransformer;
+import net.zomis.server.messtransform.MessageTransformer;
 import net.zomis.server.model.Server;
 
 import org.apache.log4j.LogManager;
@@ -15,65 +14,52 @@ import org.apache.log4j.Logger;
 public class ClientSocketHandler extends ClientIO implements Runnable {
 	private static final Logger logger = LogManager.getLogger(ClientSocketHandler.class);
 	
-	private Socket	socket;
-	private final BufferedReader	in;
-	private final PrintWriter	out;
+	private Socket socket;
+	private final InputStream in;
+	private final OutputStream out;
+    private final PrintWriter outWriter;
+    private MessageTransformer transformer;
 	
-	private final char[] readBuffer = new char[4096];
-
 	public ClientSocketHandler(Server server, Socket socket) throws IOException {
 		super(server);
 		this.socket = socket;
 		
-		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		out = new PrintWriter(socket.getOutputStream(), true);
-		
+		in = socket.getInputStream();
+		out = socket.getOutputStream();
+        outWriter = new PrintWriter(out);
+
+        transformer = server.getTransformer();
 	}
 	
 	@Override
+    @Deprecated
 	public void onSend(String message) {
-		this.out.println(message);
-		this.out.flush();
+        sendString(message);
 	}
 
-	@Override
-	public void run() {
-		String data = "";
-		
-		int eventNr = 0;
-		while (socket != null && socket.isConnected()) {
-			try {
-				int bytesRead = 0;
-				while ((bytesRead = in.read(readBuffer)) != -1) {
-                    data = new String(readBuffer, 0, bytesRead);
-					logger.info("");
-					
-					String[] datas = data.split("" + (char) 0);
-					for (String mess : datas) {
-						if (mess.trim().isEmpty())
-							continue;
-						
-						logger.info("[Event #" + ++eventNr + "]");
-						logger.info("Received from " + this + ": " + mess);
-						this.sentToServer(mess);
-					}
-				}
+    @Override
+    protected void onSend(Message data) {
+        transformer.transform(data, this::sendBytes, this::onSend);
+    }
 
-				logger.info("Socket Communication no more bytes to read for " + this.toString());
-				if (socket != null)
-					socket.close();
-				socket = null;
-			} catch (IOException ioe) {
-				logger.warn("Socket " + this + " exception: " + ioe.getMessage());
-				try {
-					if (this.socket != null)
-						this.socket.close();
-				} catch (IOException e) {
-				}
-				this.socket = null;
-				logger.debug("Socket has been set to null: " + this);
-			}
-		}
+    private void sendString(String data) {
+        outWriter.print(data);
+        outWriter.flush();
+    }
+
+    private void sendBytes(byte[] bytes) throws IOException {
+        out.write(bytes);
+        out.flush();
+    }
+
+    @Override
+	public void run() {
+        logger.info("Started thread for " + this);
+        try {
+            transformer.read(in, null, mess -> this.sentToServer(mess));
+        } catch (Exception ex) {
+            logger.error("Error in " + this, ex);
+        }
 	}
 
 	@Override

@@ -2,6 +2,7 @@ package net.zomis.server.clients;
 
 import java.util.function.Consumer;
 
+import net.zomis.server.messages.Message;
 import net.zomis.server.model.Server;
 
 public class FakeClient extends ClientIO {
@@ -19,6 +20,11 @@ public class FakeClient extends ClientIO {
 	}
 
 	@Override
+    protected void onSend(Message data) {
+        throw new UnsupportedOperationException("not supported yet");
+    }
+
+    @Override
 	public void close() {
 		
 	}

@@ -1,15 +1,18 @@
 package net.zomis.server.model;
 
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.zomis.server.clients.Base64Utils;
 import net.zomis.server.clients.ClientIO;
 import net.zomis.server.clients.ClientWebSocket;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.java_websocket.WebSocket;
+import org.java_websocket.framing.Framedata;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
@@ -30,13 +33,13 @@ public class ServerWeb implements ConnectionHandler {
 			this.server = server;
 		}
 		
-		private final Map<WebSocket, ClientIO> webClients;
+		private final Map<WebSocket, ClientWebSocket> webClients;
 		private final Server server;
 		
 		@Override
 		public void onOpen(WebSocket conn, ClientHandshake handshake) {
 			logger.info("Connection opened: " + conn);
-			ClientIO io = new ClientWebSocket(server, conn);
+			ClientWebSocket io = new ClientWebSocket(server, conn);
 			webClients.put(conn, io);
 			server.newClient(io);
 		}
@@ -53,15 +56,27 @@ public class ServerWeb implements ConnectionHandler {
 			server.onDisconnected(io);
 		}
 
-		@Override
+        @Override
+        public void onMessage(WebSocket conn, ByteBuffer message) {
+            // TODO: Use onMessage(WebSocket, ByteBuffer) ?
+            super.onMessage(conn, message);
+        }
+
+        @Override
+        public void onWebsocketMessageFragment(WebSocket conn, Framedata frame) {
+            // TODO: Use onWebsocketMessageFragment?
+            super.onWebsocketMessageFragment(conn, frame);
+        }
+
+        @Override
 		public void onMessage(WebSocket conn, String message) {
 			logger.info("Connection message from: " + conn + ": " + message);
-			ClientIO io = webClients.get(conn);
+			ClientWebSocket io = webClients.get(conn);
 			if (io == null) {
 				logger.error("Message was recieved from unknown ClientIO");
 				return;
 			}
-			io.sentToServer(message);
+			io.transformAndHandle(Base64Utils.fromBase64(message));
 		}
 
 		@Override

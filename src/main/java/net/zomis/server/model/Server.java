@@ -17,6 +17,10 @@ import net.zomis.server.clients.ClientIO;
 import net.zomis.server.games.BattleshipGame;
 import net.zomis.server.games.TTTGame;
 
+import net.zomis.server.messages.LoginMessage;
+import net.zomis.server.messages.Message;
+import net.zomis.server.messtransform.FourCharTransform;
+import net.zomis.server.messtransform.MessageTransformer;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -38,16 +42,20 @@ public class Server {
 	private final Map<String, GameFactory> gameFactories = new ConcurrentHashMap<>();
 
 	private final Set<ConnectionHandler> handlers = Collections.synchronizedSet(new HashSet<>());
+    private final MessageTransformer transformer = new FourCharTransform();
 
 	public Server() {
 		this.incomingHandler = new CommandHandler();
 		this.newChatRoom("Main");
 		
 		Server server = this;
+
+        transformer.registerClass(LoginMessage.class);
+
 		CommandHandler incomings = server.getIncomingHandler();
+        incomings.addHandler(LoginMessage.class, server::loginRequest);
 		incomings.addHandler("CHAT", cmd -> server.incomingChatMessage(cmd));
-		incomings.addHandler("USER", cmd -> server.loginRequest(cmd));
-		
+
 		incomings.addHandler("INVT", cmd -> server.inviteRequest(cmd));
 		incomings.addHandler("INVY", cmd -> server.inviteRequest(cmd));
 		incomings.addHandler("INVN", cmd -> server.inviteRequest(cmd));
@@ -62,8 +70,12 @@ public class Server {
 	private ChatArea getMainChat() {
 		return chats.get(0);
 	}
-	
-	public ChatArea newChatRoom(String name) {
+
+    public MessageTransformer getTransformer() {
+        return transformer;
+    }
+
+    public ChatArea newChatRoom(String name) {
 		int id = roomCounter.getAndIncrement();
 		ChatArea room = new ChatArea(roomCounter.getAndIncrement(), name);
 		chats.put(id, room);
@@ -103,6 +115,11 @@ public class Server {
 			logger.warn("Unhandled Message: " + message + " from " + client);
 	}
 
+    public void handleMessage(ClientIO client, Message message) {
+        Objects.requireNonNull(client, "Cannot handle message from a null client");
+        incomingHandler.handle(message, client);
+    }
+
 	public void newClient(ClientIO cl) {
 		logger.info("New client: " + cl);
 		clients.add(cl);
@@ -114,27 +131,27 @@ public class Server {
 		getMainChat().remove(client);
 	}
 
-	public void loginRequest(Command cmd) {
-		ClientIO sender = cmd.getSender();
-		boolean usernameTaken = clients.stream().anyMatch(cl -> cl.getName().equals(cmd.getParameter(2)));
-		// Perhaps use `Map<String, ClientIO>` for client names?
-		boolean allowed = !usernameTaken && sender.login(cmd.getParameter(2), cmd.getParameter(3));
-		logger.info("Login request: " + sender + " -- " + cmd);
-		if (!allowed) {
-			sender.sendToClient("FAIL " + usernameTaken); // TODO: Add proper protocol/messages for login denied
-			sender.close();
-		}
-		else {
-			sender.sendToClient("WELC " + sender.getName());
-			broadcast("STUS " + sender.getName() + " online");
-			clients.stream()
-				.filter(cl -> cl.isLoggedIn())
-				.filter(cl -> !cl.getName().equals(sender.getName())) // send information about the clients who were already connected
-				.forEach(cl -> sender.sendToClient("STUS " + cl.getName() + " " + cl.getStatus()));
-		}
-	}
+    public void loginRequest(LoginMessage cmd, ClientIO sender) {
+        logger.info("Login Request! " + cmd);
+        boolean usernameTaken = clients.stream().anyMatch(cl -> cl.getName().equals(cmd.getUsername()));
+        // Perhaps use `Map<String, ClientIO>` for client names?
+        boolean allowed = !usernameTaken && sender.login(cmd.getUsername(), cmd.getPassword());
+        logger.info("Login request: " + sender + " -- " + cmd);
+        if (!allowed) {
+            sender.sendToClient("FAIL " + usernameTaken); // TODO: Add proper protocol/messages for login denied
+            sender.close();
+        }
+        else {
+            sender.sendToClient("WELC " + sender.getName());
+            broadcast("STUS " + sender.getName() + " online");
+            clients.stream()
+                    .filter(cl -> cl.isLoggedIn())
+                    .filter(cl -> !cl.getName().equals(sender.getName())) // send information about the clients who were already connected
+                    .forEach(cl -> sender.sendToClient("STUS " + cl.getName() + " " + cl.getStatus()));
+        }
+    }
 
-	void broadcast(String data) {
+    void broadcast(String data) {
 		clients.forEach(cl -> cl.sendToClient(data));
 	}
 
