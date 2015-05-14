@@ -114,6 +114,7 @@ public class Server {
 
     public void onDisconnected(ClientIO client) {
         clients.remove(client);
+        broadcast("USER ${client.name} offline");
         getMainChat().remove(client);
     }
 

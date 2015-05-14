@@ -72,5 +72,6 @@ public class ClientSocketHandler extends ClientIO implements Runnable {
 		catch (IOException e) {
 			logger.warn("Error closing", e);
 		}
+        disconnected();
 	}
 }

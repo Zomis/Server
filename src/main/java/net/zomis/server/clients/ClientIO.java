@@ -79,4 +79,8 @@ public abstract class ClientIO {
         logger.info("Sent to server: " + mess);
         server.handleMessage(this, mess);
     }
+
+    protected void disconnected() {
+        server.onDisconnected(this);
+    }
 }
