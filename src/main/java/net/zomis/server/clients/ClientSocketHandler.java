@@ -62,6 +62,7 @@ public class ClientSocketHandler extends ClientIO implements Runnable {
         } catch (Exception ex) {
             logger.error("Error in " + this, ex);
         }
+        disconnected();
 	}
 
 	@Override
