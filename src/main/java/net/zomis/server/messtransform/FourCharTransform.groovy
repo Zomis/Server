@@ -62,6 +62,7 @@ class FourCharTransform implements MessageTransformer {
         String id = array[0]
         Class<?> clazz = messages.get(id)
         if (!clazz) {
+            logger.error "Class $clazz not registered, returning null"
             return null
         }
         FourChar annot = clazz.getAnnotation(FourChar)

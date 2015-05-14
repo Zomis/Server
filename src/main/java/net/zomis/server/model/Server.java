@@ -82,25 +82,6 @@ public class Server {
 		return room;
 	}
 	
-	// x Web Sockets
-	// x Regular Sockets
-	// x Step 1. Make clients chat with each other
-	// x Step 2. Make a client be able to invite another client to a game (create the game here already? For parameterized CWars2 for example)
-
-	// TODO: LOW PRIO saving game state
-	// TODO: LOW PRIO replays
-	// TODO: MEDIUM PRIO different kinds of communication, client informs if it wants JSON, MFE-style with spaces, or other variants
-	// TODO: MEDIUM PRIO server lobby, see all available players and activity in the different game types (chat rooms?)
-	// TODO: MEDIUM PRIO game lobby, see online/available players, games running, and available players/AIs (MFE lobby)
-	// TODO: Automatic Unit tests
-
-	// TODO: HIGH PRIO game chats (MFE in-game chat)
-	// TODO: HIGH PRIO Server controls games
-	// TODO: LOW PRIO Hibernate, database (HSQLDB? MySQL? Postgres?)
-
-	// TODO: Step 3. Two clients start a TTT ultimate game and play and have in-game chat
-	// TODO: Step 4. ZonesAndCards - send and receive information about cards played, cards dealt, resource changes...
-	
 	public Collection<ClientIO> getClients() {
 		return new ArrayList<>(clients);
 	}
@@ -109,6 +90,7 @@ public class Server {
 		return incomingHandler;
 	}
 
+    @Deprecated
 	public void handleMessage(ClientIO client, String message) {
 		Objects.requireNonNull(client, "Cannot handle message from a null client");
 		if (!incomingHandler.handle(client.parseMessage(message)))
