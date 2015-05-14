@@ -26,13 +26,13 @@ public class TTTUltimateTest {
 		FakeClient client1 = new FakeClient(server, listOne::add);
 		server.newClient(client1);
 		
-		client1.sentToServer("USER xxx TestOne");
+		client1.sentToServer("USER xxx TestOne password");
 		assertEquals("WELC TestOne", listOne.poll());
 		
 		FakeClient client2 = new FakeClient(server, listTwo::add);
 		server.newClient(client2);
 		
-		client2.sentToServer("USER xxx TestTwo");
+		client2.sentToServer("USER xxx TestTwo password");
 		
 		assertEquals("WELC TestTwo", listTwo.poll());
 		assertEquals("STUS TestOne online", listOne.poll());

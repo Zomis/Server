@@ -6,6 +6,7 @@ import java.util.Set;
 
 import net.zomis.server.clients.ClientIO;
 
+import net.zomis.server.messages.ChatMessage;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -25,9 +26,9 @@ public class ChatArea {
 	}
 	
 	public void broadcast(String message) {
-		logger.info(this + " broadcast: " + message);
-		String send = "CHAT " + id + " " + message;
-		clients.forEach(cl -> cl.sendToClient(send));
+        ChatMessage chatMessage = new ChatMessage(id, message);
+		logger.info(this + " broadcast: " + chatMessage);
+		clients.forEach(cl -> cl.sendToClient(chatMessage));
 	}
 	
 	public void add(ClientIO client) {

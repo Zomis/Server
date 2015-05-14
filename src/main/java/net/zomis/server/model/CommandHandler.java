@@ -35,11 +35,9 @@ public class CommandHandler {
 	
 	
     public <E extends Message> void handle(E message, ClientIO client) {
-        System.out.println("Handle " + message);
         @SuppressWarnings("unchecked")
         MessageHandler<E> messagePerform = (MessageHandler<E>) this.commands2.get(message.getClass());
         if (messagePerform == null) {
-            System.out.println("NPE");
             throw new NullPointerException("No handler for message " + message + " of class " + message.getClass());
         }
         messagePerform.handle(message, client);

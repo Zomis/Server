@@ -16,6 +16,8 @@ class FourCharTransform implements MessageTransformer {
     @Override
     void registerClass(Class<? extends Message> clazz) {
         FourChar annot = clazz.getAnnotation(FourChar)
+        assert annot.value().length() == 4
+        assert !messages.containsKey(annot.value())
         messages.put(annot.value(), clazz)
     }
 
@@ -23,9 +25,10 @@ class FourCharTransform implements MessageTransformer {
     void transform(Message message, Sender<byte[]> byteSender, Sender<String> stringSender) {
         if (stringSender) {
             def annot = message.class.getAnnotation(FourChar)
-            Closure<String> closure = (Closure<String>) annot.outgoingStr().newInstance(null, null)
+            Closure<String> closure = (Closure<String>) annot.outgoingStr().newInstance(message, message)
+            String id = annot.value()
             String data = closure.call(message)
-            stringSender.send(data)
+            stringSender.send("$id $data".toString())
         } else {
             throw new IllegalArgumentException('expected a string sender')
         }

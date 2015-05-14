@@ -3,15 +3,18 @@ package net.zomis.server.clients;
 import java.util.function.Consumer;
 
 import net.zomis.server.messages.Message;
+import net.zomis.server.messtransform.MessageTransformer;
 import net.zomis.server.model.Server;
 
 public class FakeClient extends ClientIO {
 
 	private final Consumer<String> consumer;
-	
-	public FakeClient(Server server, Consumer<String> consumer) {
+    private final MessageTransformer transformer;
+
+    public FakeClient(Server server, Consumer<String> consumer) {
 		super(server);
 		this.consumer = consumer;
+        this.transformer = server.getTransformer();
 	}
 
 	@Override
@@ -21,7 +24,7 @@ public class FakeClient extends ClientIO {
 
 	@Override
     protected void onSend(Message data) {
-        throw new UnsupportedOperationException("not supported yet");
+        transformer.transform(data, null, this::onSend);
     }
 
     @Override

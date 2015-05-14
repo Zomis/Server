@@ -38,15 +38,18 @@ public class ClientSocketHandler extends ClientIO implements Runnable {
 
     @Override
     protected void onSend(Message data) {
-        transformer.transform(data, this::sendBytes, this::onSend);
+        transformer.transform(data, this::sendBytes, this::sendString);
     }
 
     private void sendString(String data) {
+        logger.info("Send string: " + data);
         outWriter.print(data);
+        outWriter.print('\n');
         outWriter.flush();
     }
 
     private void sendBytes(byte[] bytes) throws IOException {
+        logger.info("Send bytes: " + bytes.length);
         out.write(bytes);
         out.flush();
     }
