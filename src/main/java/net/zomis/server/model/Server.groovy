@@ -95,6 +95,7 @@ public class Server {
     public void handleMessage(ClientIO client, String message) {
         Objects.requireNonNull(client, "Cannot handle message " + message + " from a null client");
         Objects.requireNonNull(message, "Cannot handle null message from " + client);
+        message = message.trim()
         if (!incomingHandler.handle(client.parseMessage(message))) {
             handleMessage(client, transformer.stringToMessage(message));
         }

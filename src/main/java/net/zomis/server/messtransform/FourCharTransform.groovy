@@ -66,6 +66,7 @@ class FourCharTransform implements MessageTransformer {
     }
 
     Message stringToMessage(String str) {
+        str = str.trim()
         String[] array = str.split(' ')
         String id = array[0]
         Class<?> clazz = messages.get(id)
