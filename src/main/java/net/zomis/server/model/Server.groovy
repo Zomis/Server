@@ -1,14 +1,8 @@
 package net.zomis.server.model
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import net.zomis.server.messages.both.InviteRequest
+import net.zomis.server.messages.both.InviteResponse
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -54,14 +48,18 @@ public class Server {
         transformer.registerClass(LoginMessage.class);
         transformer.registerClass(ChatMessage.class);
         transformer.registerClass(ServerErrorMessage.class);
+        transformer.registerClass(InviteRequest.class);
+        transformer.registerClass(InviteResponse.class);
 
         CommandHandler incomings = server.getIncomingHandler();
         incomings.addHandler(LoginMessage.class, server.&loginRequest);
         incomings.addHandler(ChatMessage.class, server.&incomingChatMessage);
+        incomings.addHandler(InviteRequest.class, server.&inviteRequest);
+        incomings.addHandler(InviteResponse.class, server.&inviteResponse);
 
-        incomings.addHandler("INVT", {cmd -> server.inviteRequest(cmd)});
-        incomings.addHandler("INVY", {cmd -> server.inviteRequest(cmd)});
-        incomings.addHandler("INVN", {cmd -> server.inviteRequest(cmd)});
+//        incomings.addHandler("INVT", {cmd -> server.inviteRequest(cmd)});
+//        incomings.addHandler("INVY", {cmd -> server.inviteRequest(cmd)});
+//        incomings.addHandler("INVN", {cmd -> server.inviteRequest(cmd)});
         incomings.addHandler("MOVE", {cmd -> server.incomingGameCommand(cmd)});
 
         server.addGameFactory("UTTT", {serv, id -> new TTTGame(serv, id)});
@@ -157,42 +155,36 @@ public class Server {
         this.gameFactories.put(gameType, factory);
     }
 
-    public boolean inviteRequest(Command cmd) {
+    public void inviteRequest(InviteRequest request, ClientIO sender) {
         final GameInvite invite;
-        switch (cmd.getCommand()) {
-            case "INVT":
-                String target = cmd.getParameter(2);
-                Game game = createGame(cmd.getParameter(1));
-                if (game == null) {
-                    cmd.getSender().sendToClient("FAIL Game creation failed");
-                    return false;
-                }
-                invite = new GameInvite(this, inviteId.getAndIncrement(), cmd, game);
-                this.invites.put(invite.getId(), invite);
+        String target = request.who
+        Game game = createGame(request.gameType)
+        if (game == null) {
+            sender.sendToClient("FAIL Game creation failed");
+            return;
+        }
+        invite = new GameInvite(this, inviteId.getAndIncrement(), request, sender, game);
+        this.invites.put(invite.getId(), invite);
 
-                Stream<ClientIO> targetStream = clients.stream().filter({cl -> cl.getName().equals(target)});
-                Optional<ClientIO> result = targetStream.findFirst();
-                if (result.isPresent()) {
-                    invite.sendInvite(result.get());
-                }
-                else cmd.getSender().sendToClient("FAIL No such user");
-                return result.isPresent();
-            case "INVY":
-                invite = invites.get(cmd.getParameterInt(1));
-                if (invite == null) {
-                    cmd.getSender().sendToClient("FAIL Invalid invite id");
-                    return false;
-                }
-                return invite.inviteAccept(cmd.getSender());
-            case "INVN":
-                invite = invites.get(cmd.getParameterInt(1));
-                if (invite == null) {
-                    cmd.getSender().sendToClient("FAIL Invalid invite id");
-                    return false;
-                }
-                return invite.inviteDecline(cmd.getSender());
-            default:
-                throw new AssertionError("Invalid command: " + cmd);
+        Stream<ClientIO> targetStream = clients.stream().filter({cl -> cl.getName().equals(target)});
+        Optional<ClientIO> result = targetStream.findFirst();
+        if (result.isPresent()) {
+            invite.sendInvite(result.get());
+        } else {
+            sender.sendToClient("FAIL No such user")
+        }
+    }
+
+    public void inviteResponse(InviteResponse response, ClientIO sender) {
+        GameInvite invite = invites.get(response.inviteId);
+        if (invite == null) {
+            sender.sendToClient("FAIL Invalid invite id");
+            return;
+        }
+        if (response.accepted) {
+            invite.inviteAccept(sender);
+        } else {
+            invite.inviteDecline(sender);
         }
     }
 

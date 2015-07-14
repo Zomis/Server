@@ -6,6 +6,7 @@ import java.util.List;
 
 import net.zomis.server.clients.ClientIO;
 
+import net.zomis.server.messages.both.InviteRequest;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -19,11 +20,13 @@ public class GameInvite {
 	private final List<ClientIO> players;
 
 	private final String details;
+    private final String gameType;
 
-	public GameInvite(Server server, int id, Command cmd, Game game) {
+    public GameInvite(Server server, int id, InviteRequest request, ClientIO sender, Game game) {
 		this.id = id;
-		this.host = cmd.getSender();
-		this.details = cmd.getFullCommand(1);
+		this.host = sender;
+        this.gameType = request.getGameType();
+		this.details = request.getParameters();
 		this.game = game;
 		this.invited = Collections.synchronizedList(new ArrayList<>());
 		this.players = Collections.synchronizedList(new ArrayList<>());
@@ -35,8 +38,12 @@ public class GameInvite {
 	}
 	
 	public void sendInvite(ClientIO to) {
-		String inviteMess = "INVT " + this.id + " " + this.details;
-		to.sendToClient(inviteMess);
+        InviteRequest message = new InviteRequest();
+        message.setGameType(gameType);
+        message.setInviteId(id);
+        message.setParameters(details);
+        message.setWho(host.getName());
+		to.sendToClient(message);
 		this.invited.add(to);
 	}
 

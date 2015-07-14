@@ -41,15 +41,15 @@ public class TTTUltimateTest {
 		assertEquals("STUS TestOne online", listTwo.poll());
 		
 		client1.sentToServer("INVT UTTT TestTwo");
-		assertEquals("INVT 0 UTTT TestTwo", listTwo.poll());
+		assertEquals("INVT 0 UTTT TestOne", listTwo.poll());
 		
 		Game game = server.getGames().get(0);
 		assertNotNull(game);
 		assertEquals(GameState.NOT_STARTED, game.getState());
 		
-		client2.sentToServer("INVY 0");
+		client2.sentToServer("INVR 0 1");
+        assertEquals("NEWG 0 1", listTwo.poll());
 		assertEquals("NEWG 0 0", listOne.poll());
-		assertEquals("NEWG 0 1", listTwo.poll());
 		assertEquals(GameState.RUNNING, game.getState());
 		
 		client1.sentToServer("MOVE 0 4 2");
