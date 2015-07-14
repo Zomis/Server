@@ -70,8 +70,8 @@ class FourCharTransform implements MessageTransformer {
         String id = array[0]
         Class<?> clazz = messages.get(id)
         if (!clazz) {
-            logger.error "Class $clazz not registered, returning null"
-            return null
+            logger.error "No class associated with FourChar value $id"
+            throw new NullPointerException("No class associated with FourChar value $id")
         }
         FourChar annot = clazz.getAnnotation(FourChar)
         Closure<Message> closure = (Closure<Message>) annot.incomingStr().newInstance(null, null)

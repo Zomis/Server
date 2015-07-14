@@ -4,6 +4,7 @@ import net.zomis.server.clients.ClientIO;
 import net.zomis.server.messages.Message;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
@@ -35,6 +36,7 @@ public class CommandHandler {
 	
 	
     public <E extends Message> void handle(E message, ClientIO client) {
+        Objects.requireNonNull(message, "Cannot handle a null message from " + client);
         @SuppressWarnings("unchecked")
         MessageHandler<E> messagePerform = (MessageHandler<E>) this.commands2.get(message.getClass());
         if (messagePerform == null) {

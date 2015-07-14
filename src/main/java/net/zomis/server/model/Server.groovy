@@ -95,14 +95,16 @@ public class Server {
 
     @Deprecated
     public void handleMessage(ClientIO client, String message) {
-        Objects.requireNonNull(client, "Cannot handle message from a null client");
+        Objects.requireNonNull(client, "Cannot handle message " + message + " from a null client");
+        Objects.requireNonNull(message, "Cannot handle null message from " + client);
         if (!incomingHandler.handle(client.parseMessage(message))) {
             handleMessage(client, transformer.stringToMessage(message));
         }
     }
 
     public void handleMessage(ClientIO client, Message message) {
-        Objects.requireNonNull(client, "Cannot handle message from a null client");
+        Objects.requireNonNull(client, "Cannot handle message " + message + " from a null client");
+        Objects.requireNonNull(message, "Cannot handle null message from " + client);
         incomingHandler.handle(message, client);
     }
 
