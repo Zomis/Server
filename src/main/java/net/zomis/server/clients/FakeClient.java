@@ -43,4 +43,8 @@ public class FakeClient extends ClientIO {
 		
 	}
 	
+    @Override
+    public String toString() {
+        return "FakeClient-" + this.getName();
+    }
 }

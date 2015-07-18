@@ -4,12 +4,15 @@ import net.zomis.server.clients.ClientIO
 import net.zomis.server.messages.Message
 import net.zomis.server.messtransform.MessageTransformer
 import net.zomis.server.model.Server
+import org.apache.log4j.LogManager
+import org.apache.log4j.Logger
 
 import java.util.function.Predicate
 
 class TestClient {
 
     private static final Message NULL_MESSAGE = new Message() { }
+    private static final Logger logger = LogManager.getLogger(TestClient)
     private boolean closed
     Queue<String> stringMessages = new ArrayDeque<>()
     Queue<Message> messages = new ArrayDeque<>()
@@ -23,12 +26,14 @@ class TestClient {
 
     void handleString(String data) {
         assert !closed
+        logger.debug("TestClient $io received string $data")
         stringMessages.add(data)
         messages.add(NULL_MESSAGE)
     }
 
     void handleMessage(Message data) {
         assert !closed
+        logger.debug("TestClient $io received message $data")
         transformer.transform(data, null, {stringMessages.add(it)})
         messages.add(data)
     }
