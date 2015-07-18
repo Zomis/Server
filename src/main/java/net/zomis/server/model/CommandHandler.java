@@ -22,7 +22,7 @@ public class CommandHandler {
         commands.put(command, handler);
     }
 
-    public <T extends Message> void addHandler(Class<T> command, MessageHandler<T> handler) {
+    public <T extends Message> void addHandler(Class<? extends T> command, MessageHandler<T> handler) {
         commands2.put(command, handler);
     }
 

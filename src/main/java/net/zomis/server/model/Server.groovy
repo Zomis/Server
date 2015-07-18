@@ -1,5 +1,6 @@
 package net.zomis.server.model
 
+import net.zomis.server.games.GameMoveXY
 import net.zomis.server.messages.both.InviteRequest
 import net.zomis.server.messages.both.InviteResponse
 
@@ -50,17 +51,15 @@ public class Server {
         transformer.registerClass(ServerErrorMessage.class);
         transformer.registerClass(InviteRequest.class);
         transformer.registerClass(InviteResponse.class);
+        transformer.registerClass(GameMoveXY.class);
 
         CommandHandler incomings = server.getIncomingHandler();
         incomings.addHandler(LoginMessage.class, server.&loginRequest);
         incomings.addHandler(ChatMessage.class, server.&incomingChatMessage);
         incomings.addHandler(InviteRequest.class, server.&inviteRequest);
         incomings.addHandler(InviteResponse.class, server.&inviteResponse);
-
-//        incomings.addHandler("INVT", {cmd -> server.inviteRequest(cmd)});
-//        incomings.addHandler("INVY", {cmd -> server.inviteRequest(cmd)});
-//        incomings.addHandler("INVN", {cmd -> server.inviteRequest(cmd)});
-        incomings.addHandler("MOVE", {cmd -> server.incomingGameCommand(cmd)});
+        incomings.addHandler(GameMove.class, server.&incomingGameCommand)
+        incomings.addHandler(GameMoveXY.class, server.&incomingGameCommand)
 
         server.addGameFactory("UTTT", {serv, id -> new TTTGame(serv, id)});
         server.addGameFactory("Battleship", {serv, id -> new BattleshipGame(serv, id)});
@@ -186,6 +185,18 @@ public class Server {
             invite.inviteAccept(sender);
         } else {
             invite.inviteDecline(sender);
+        }
+    }
+
+    public void incomingGameCommand(GameMove message, ClientIO sender) {
+        Game game = games.get(message.gameId);
+        if (game != null) {
+            if (!game.handleMove(message, sender)) {
+                sender.sendToClient("FAIL Invalid move");
+            }
+        }
+        else {
+            sender.sendToClient("FAIL Invalid gameid")
         }
     }
 

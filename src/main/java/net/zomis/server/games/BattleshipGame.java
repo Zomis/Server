@@ -1,14 +1,12 @@
 package net.zomis.server.games;
 
-import net.zomis.server.model.Command;
-import net.zomis.server.model.Game;
-import net.zomis.server.model.Server;
+import net.zomis.server.model.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class BattleshipGame extends Game {
+public class BattleshipGame extends Game<List<Battleship>> {
 
     private final int mapWidth = 10;
     private final int mapHeight = 10;
@@ -26,6 +24,12 @@ public class BattleshipGame extends Game {
         this.shipModels.add(Battleship.SUBMARINE);
         this.shipModels.add(Battleship.SUBMARINE);
         this.shipModels.add(Battleship.PATROL_BOAT);
+    }
+
+    @Override
+    public boolean handleMove(GameMove move, PlayerInGame player) {
+
+        return false;
     }
 
     @Override
@@ -146,6 +150,11 @@ public class BattleshipGame extends Game {
     @Override
     protected void updateStatus() {
 
+    }
+
+    @Override
+    protected List<Battleship> createPlayerData(int idx) {
+        return new ArrayList<>();
     }
 
     @Override
