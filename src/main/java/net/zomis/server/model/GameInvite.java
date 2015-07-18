@@ -43,8 +43,8 @@ public class GameInvite {
         message.setInviteId(id);
         message.setParameters(details);
         message.setWho(host.getName());
-		to.sendToClient(message);
-		this.invited.add(to);
+        this.invited.add(to);
+        to.sendToClient(message);
 	}
 
 	public boolean inviteAccept(ClientIO who) {
