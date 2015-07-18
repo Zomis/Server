@@ -4,6 +4,7 @@ import net.zomis.server.games.GameMoveXY
 import net.zomis.server.messages.both.InviteRequest
 import net.zomis.server.messages.both.InviteResponse
 import net.zomis.server.messages.outgoing.ClientErrorMessage
+import net.zomis.server.messages.outgoing.ServerErrorMessage
 import net.zomis.server.messages.outgoing.WelcomeMessage
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,7 +18,6 @@ import net.zomis.server.games.TTTGame;
 import net.zomis.server.messages.ChatMessage;
 import net.zomis.server.messages.LoginMessage;
 import net.zomis.server.messages.Message;
-import net.zomis.server.messages.ServerErrorMessage;
 import net.zomis.server.messtransform.FourCharTransform;
 import net.zomis.server.messtransform.MessageTransformer;
 import org.apache.log4j.LogManager;
@@ -162,7 +162,7 @@ public class Server {
         String target = request.who
         Game game = createGame(request.gameType)
         if (game == null) {
-            sender.sendToClient("FAIL Game creation failed");
+            sender.sendToClient(new ServerErrorMessage("Game creation failed"));
             return;
         }
         invite = new GameInvite(this, inviteId.getAndIncrement(), request, sender, game);
@@ -173,14 +173,14 @@ public class Server {
         if (result.isPresent()) {
             invite.sendInvite(result.get());
         } else {
-            sender.sendToClient("FAIL No such user")
+            sender.sendToClient(new ClientErrorMessage("No user named $target"))
         }
     }
 
     public void inviteResponse(InviteResponse response, ClientIO sender) {
         GameInvite invite = invites.get(response.inviteId);
         if (invite == null) {
-            sender.sendToClient("FAIL Invalid invite id");
+            sender.sendToClient(new ClientErrorMessage("Invalid invite id ${response.inviteId}"));
             return;
         }
         if (response.accepted) {
@@ -195,12 +195,12 @@ public class Server {
         if (game != null) {
             logger.info("Incoming game message $message from $sender to game $game")
             if (!game.handleMove(message, sender)) {
-                sender.sendToClient("FAIL Invalid move");
+                sender.sendToClient(new ClientErrorMessage("Invalid move $message"));
             }
             game.aiPlayLoop()
         }
         else {
-            sender.sendToClient("FAIL Invalid gameid")
+            sender.sendToClient(new ClientErrorMessage("Invalid gameid ${message.gameId}"))
         }
     }
 
