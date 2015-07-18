@@ -12,13 +12,17 @@ public class TTTGame extends Game<TTPlayer> {
 
 	private static final Logger logger = LogManager.getLogger(TTTGame.class);
 	
-	private TTController game;
+	private final TTController game;
 	
 	public TTTGame(Server server, final int id) {
 		super(server, id);
 		game = TTControllers.ultimateTTT();
 		game.setOnMoveListener((playedAt) -> send("MOVE " + id + " " + playedAt.getGlobalX() + " " + playedAt.getGlobalY()));
 	}
+
+    public TTController getGame() {
+        return game;
+    }
 
     @Override
     public boolean handleMove(GameMove move, PlayerInGame<TTPlayer> player) {

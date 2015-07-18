@@ -85,7 +85,7 @@ public abstract class Game<T> {
             int idx = playerIterator.nextIndex();
             ClientIO player = playerIterator.next();
             T data = createPlayerData(idx);
-            PlayerInGame<T> playerInGame = new PlayerInGame<T>(this, data, player);
+            PlayerInGame<T> playerInGame = new PlayerInGame<>(this, data, player, idx);
             gamePlayers.add(playerInGame);
         }
 		players.forEach(pl -> pl.sendToClient("NEWG " + this.id + " " + players.indexOf(pl)));
