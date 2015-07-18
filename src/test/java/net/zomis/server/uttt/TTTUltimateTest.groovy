@@ -2,8 +2,10 @@ package net.zomis.server.uttt
 
 import net.zomis.server.TestServer
 import net.zomis.server.clients.ClientAI
+import net.zomis.server.games.GameMoveXY
 import net.zomis.server.games.uttt.TTAIAdapter
 import net.zomis.server.model.Game
+import net.zomis.server.model.GameMove
 import net.zomis.server.model.GameState
 import net.zomis.tttultimate.players.TTAIFactory
 import org.junit.Test
@@ -38,8 +40,8 @@ class TTTUltimateTest {
         client1.expect("MOVE 0 4 2")
         client2.expect("MOVE 0 4 2")
         // TODO: client2 should make a move as well here
-        client1.assertNoMessages()
-        client2.assertNoMessages()
+        client1.expect(GameMoveXY)
+        client2.expect(GameMoveXY)
     }
 
     @Test

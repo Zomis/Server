@@ -193,9 +193,11 @@ public class Server {
     public void incomingGameCommand(GameMove message, ClientIO sender) {
         Game game = games.get(message.gameId);
         if (game != null) {
+            logger.info("Incoming game message $message from $sender to game $game")
             if (!game.handleMove(message, sender)) {
                 sender.sendToClient("FAIL Invalid move");
             }
+            game.aiPlayLoop()
         }
         else {
             sender.sendToClient("FAIL Invalid gameid")

@@ -6,6 +6,8 @@ import java.util.*;
 
 import net.zomis.server.clients.ClientIO;
 
+import net.zomis.server.messages.Message;
+import net.zomis.server.messages.outgoing.NewGameMessage;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -40,6 +42,28 @@ public abstract class Game<T> {
         PlayerInGame<T> playerInGame = gamePlayers.get(index);
         Objects.requireNonNull(playerInGame, "No player found for " + index);
         return handleMove(move, playerInGame);
+    }
+
+    public int aiPlayLoop() {
+        int aiMoves = 0;
+        boolean played = true;
+        while (played) {
+            logger.info("Play loop");
+            played = false;
+            for (PlayerInGame<T> pig : gamePlayers) {
+                AI<T> ai = pig.getAi();
+                if (pig.hasTurn() && ai != null) {
+                    logger.info("AI is " + ai + " and " + pig + " has turn");
+                    GameMove move = ai.play(pig);
+                    boolean moveMade = handleMove(move, pig);
+                    if (moveMade) {
+                        aiMoves++;
+                    }
+                    played = played || moveMade;
+                }
+            }
+        }
+        return aiMoves;
     }
 
     @Deprecated
@@ -88,7 +112,7 @@ public abstract class Game<T> {
             PlayerInGame<T> playerInGame = new PlayerInGame<>(this, data, player, idx);
             gamePlayers.add(playerInGame);
         }
-		players.forEach(pl -> pl.sendToClient("NEWG " + this.id + " " + players.indexOf(pl)));
+		gamePlayers.forEach(pl -> pl.getClient().sendToClient(new NewGameMessage(this.id, pl.getIndex())));
 		this.onStart();
 		this.active = Instant.now();
 		this.state = GameState.RUNNING;
@@ -96,12 +120,17 @@ public abstract class Game<T> {
 
 	protected abstract void onStart();
     protected abstract T createPlayerData(int idx);
-	
-	public void send(String data) {
-		players.forEach(pl -> pl.sendToClient(data));
-	}
-	
-	public int getId() {
+
+    @Deprecated
+    public void send(String data) {
+        players.forEach(pl -> pl.sendToClient(data));
+    }
+
+    public void send(Message data) {
+        players.forEach(pl -> pl.sendToClient(data));
+    }
+
+    public int getId() {
 		return id;
 	}
 	
@@ -112,5 +141,10 @@ public abstract class Game<T> {
 	public GameState getState() {
 		return state;
 	}
-	
+
+    public abstract boolean playerCanMove(PlayerInGame<T> p);
+
+    public PlayerInGame<T> getPlayingPlayer(int index) {
+        return gamePlayers.get(index);
+    }
 }

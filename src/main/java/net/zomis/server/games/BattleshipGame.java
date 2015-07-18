@@ -158,6 +158,11 @@ public class BattleshipGame extends Game<List<Battleship>> {
     }
 
     @Override
+    public boolean playerCanMove(PlayerInGame<List<Battleship>> p) {
+        return false;
+    }
+
+    @Override
     protected void onStart() {
         String message = String.join(" ", shipModels.stream().map(ship -> ship.getModelString()).collect(Collectors.toList()));
         send("CONF", mapWidth + " " + mapHeight + " " + message);

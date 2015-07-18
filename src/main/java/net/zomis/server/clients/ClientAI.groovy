@@ -4,7 +4,10 @@ import net.zomis.server.messages.LoginMessage
 import net.zomis.server.messages.Message
 import net.zomis.server.messages.both.InviteRequest
 import net.zomis.server.messages.both.InviteResponse
+import net.zomis.server.messages.outgoing.NewGameMessage
 import net.zomis.server.model.AI
+import net.zomis.server.model.Game
+import net.zomis.server.model.PlayerInGame
 import net.zomis.server.model.Server
 import org.apache.log4j.LogManager
 import org.apache.log4j.Logger
@@ -18,8 +21,10 @@ class ClientAI implements Consumer<Message> {
     String gameType
     AI<?> ai
     ClientIO io
+    private final Server server
 
-    ClientAI(ClientIO io) {
+    ClientAI(Server server, ClientIO io) {
+        this.server = server
         this.io = io
     }
 
@@ -30,6 +35,12 @@ class ClientAI implements Consumer<Message> {
             def invite = data as InviteRequest
             boolean accept = (invite.gameType == this.gameType)
             io.sentToServer(new InviteResponse(inviteId: invite.inviteId, accepted: accept))
+        }
+        if (data instanceof NewGameMessage) {
+            def mess = data as NewGameMessage
+            Game game = server.games.get(mess.gameId)
+            PlayerInGame<?> playerInGame = game.getPlayingPlayer(mess.playerIndex)
+            playerInGame.ai = ai
         }
     }
 

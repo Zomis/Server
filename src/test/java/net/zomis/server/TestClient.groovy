@@ -37,8 +37,10 @@ class TestClient {
         assert false : 'Not implemented'
     }
 
-    void expect(Class<? extends Message> message) {
-        assert false : 'Not implemented'
+    void expect(Class<? extends Message> clazz) {
+        Message message = takeMessage()
+        assert message : "Expected message of type $clazz but no message found"
+        assert clazz.isAssignableFrom(message.class)
     }
 
     void awaitUntil(Predicate<Message> predicate) {
@@ -55,8 +57,10 @@ class TestClient {
 
     private Message takeMessage() {
         assert messages.size() == stringMessages.size()
-        stringMessages.poll()
-        messages.poll()
+        def str = stringMessages.poll()
+        Message mess = messages.poll()
+        assert mess != NULL_MESSAGE : 'Received a string, not a message. Received string is ' + str
+        mess
     }
 
     private String takeString() {

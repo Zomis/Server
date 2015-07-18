@@ -41,7 +41,7 @@ class TestServer {
         fakeClient.addConsumer(client.&handleMessage)
         server.newClient(fakeClient)
 
-        ClientAI clientAI = new ClientAI(fakeClient)
+        ClientAI clientAI = new ClientAI(server, fakeClient)
         clientAI.gameType = gameType
         clientAI.ai = ai
         fakeClient.addConsumer(clientAI)
