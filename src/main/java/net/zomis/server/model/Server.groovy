@@ -3,6 +3,8 @@ package net.zomis.server.model
 import net.zomis.server.games.GameMoveXY
 import net.zomis.server.messages.both.InviteRequest
 import net.zomis.server.messages.both.InviteResponse
+import net.zomis.server.messages.outgoing.ClientErrorMessage
+import net.zomis.server.messages.outgoing.WelcomeMessage
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -125,11 +127,10 @@ public class Server {
         boolean allowed = !usernameTaken && sender.login(cmd.getUsername(), cmd.getPassword());
         logger.info("Login request: " + sender + " -- " + cmd);
         if (!allowed) {
-            sender.sendToClient("FAIL " + usernameTaken); // TODO: Add proper protocol/messages for login denied
+            sender.sendToClient(new ClientErrorMessage(usernameTaken ? "Username already in use" : "Login denied"));
             sender.close();
-        }
-        else {
-            sender.sendToClient("WELC " + sender.getName());
+        } else {
+            sender.sendToClient(new WelcomeMessage(sender.getName()));
             broadcast("STUS " + sender.getName() + " online");
             clients.stream()
                     .filter({cl -> cl.isLoggedIn()})
@@ -138,6 +139,7 @@ public class Server {
         }
     }
 
+    @Deprecated
     void broadcast(String data) {
         clients.forEach({cl -> cl.sendToClient(data)});
     }
