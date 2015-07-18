@@ -32,7 +32,6 @@ public class BattleshipGame extends Game<List<Battleship>> {
         return false;
     }
 
-    @Override
     protected boolean makeMove(Command command, int player) {
         if (command.getParameter(2).equals("SHIP")) {
             if (shipsChosen[player]) {

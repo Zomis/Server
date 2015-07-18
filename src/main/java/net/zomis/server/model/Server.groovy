@@ -204,15 +204,6 @@ public class Server {
         }
     }
 
-    public void incomingGameCommand(Command cmd) {
-        Game game = games.get(cmd.getParameterInt(1));
-        if (game != null) {
-            if (!game.handleMove(cmd))
-                cmd.getSender().sendToClient("FAIL Invalid move");
-        }
-        else cmd.getSender().sendToClient("FAIL Invalid gameid");
-    }
-
     private Game createGame(String parameter) {
         GameFactory suppl = gameFactories.get(parameter);
         if (suppl == null) {

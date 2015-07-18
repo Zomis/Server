@@ -41,6 +41,7 @@ public abstract class Game<T> {
         }
         PlayerInGame<T> playerInGame = gamePlayers.get(index);
         Objects.requireNonNull(playerInGame, "No player found for " + index);
+        this.active = Instant.now();
         return handleMove(move, playerInGame);
     }
 
@@ -66,23 +67,6 @@ public abstract class Game<T> {
         return aiMoves;
     }
 
-    @Deprecated
-	public boolean handleMove(Command command) {
-		if (!players.contains(command.getSender())) {
-			logger.warn("Game did not contain player " + command.getSender());
-			return false;
-		}
-		int index = players.indexOf(command.getSender());
-		logger.info("Command was received from index " + index + ": " + command.getSender().getName());
-		this.active = Instant.now();
-		return makeMove(command, index);
-	}
-
-    @Deprecated
-	protected boolean makeMove(Command command, int player) {
-        return false;
-    }
-	
 	protected abstract void updateStatus();
 
 	public void endGame() {
