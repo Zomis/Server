@@ -1,5 +1,8 @@
 package net.zomis.server.clients;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Consumer;
 
 import net.zomis.server.messages.Message;
@@ -8,23 +11,31 @@ import net.zomis.server.model.Server;
 
 public class FakeClient extends ClientIO {
 
-	private final Consumer<String> consumer;
-    private final MessageTransformer transformer;
+    @Deprecated
+    private final List<Consumer<String>> stringConsumers = Collections.synchronizedList(new ArrayList<>());
+    private final List<Consumer<Message>> messageConsumers = Collections.synchronizedList(new ArrayList<>());
 
-    public FakeClient(Server server, Consumer<String> consumer) {
+    public FakeClient(Server server) {
 		super(server);
-		this.consumer = consumer;
-        this.transformer = server.getTransformer();
 	}
 
-	@Override
+    public void addConsumerString(Consumer<String> consumer) {
+        stringConsumers.add(consumer);
+    }
+
+    public void addConsumer(Consumer<Message> consumer) {
+        messageConsumers.add(consumer);
+    }
+
+    @Override
+    @Deprecated
 	public void onSend(String message) {
-		consumer.accept(message);
+        stringConsumers.forEach(consumer -> consumer.accept(message));
 	}
 
 	@Override
     protected void onSend(Message data) {
-        transformer.transform(data, null, this::onSend);
+        messageConsumers.forEach(consumer -> consumer.accept(data));
     }
 
     @Override

@@ -7,37 +7,30 @@ import net.zomis.server.model.Server
 
 import java.util.function.Predicate
 
-class TestClient extends ClientIO {
+class TestClient {
 
     private static final Message NULL_MESSAGE = new Message() { }
     private boolean closed
-    ClientIO deleg
     Queue<String> stringMessages = new ArrayDeque<>()
     Queue<Message> messages = new ArrayDeque<>()
     MessageTransformer transformer
+    ClientIO io
 
-    TestClient(Server server) {
-        super(server)
+    TestClient(Server server, ClientIO io) {
         this.transformer = server.getTransformer()
+        this.io = io
     }
 
-    @Override
-    protected void onSend(String data) {
+    void handleString(String data) {
         assert !closed
         stringMessages.add(data)
         messages.add(NULL_MESSAGE)
     }
 
-    @Override
-    protected void onSend(Message data) {
+    void handleMessage(Message data) {
         assert !closed
         transformer.transform(data, null, {stringMessages.add(it)})
         messages.add(data)
-    }
-
-    @Override
-    void close() {
-        closed = true
     }
 
     void expect(Message message) {
@@ -76,4 +69,14 @@ class TestClient extends ClientIO {
         assert messages.isEmpty()
         assert stringMessages.isEmpty()
     }
+
+    @Deprecated
+    void sentToServer(String message) {
+        io.sentToServer(message)
+    }
+
+    void sentToServer(Message message) {
+        io.sentToServer(message)
+    }
+
 }
