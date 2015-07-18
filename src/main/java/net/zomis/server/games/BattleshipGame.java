@@ -1,5 +1,6 @@
 package net.zomis.server.games;
 
+import net.zomis.server.games.battleship.ShipPlacementMove;
 import net.zomis.server.model.*;
 
 import java.util.*;
@@ -27,19 +28,15 @@ public class BattleshipGame extends Game<List<Battleship>> {
     }
 
     @Override
-    public boolean handleMove(GameMove move, PlayerInGame player) {
-
-        return false;
-    }
-
-    protected boolean makeMove(Command command, int player) {
-        if (command.getParameter(2).equals("SHIP")) {
+    public boolean handleMove(GameMove move, PlayerInGame pl) {
+        int player = pl.getIndex();
+        if (move instanceof ShipPlacementMove) {
             if (shipsChosen[player]) {
                 this.send("ERRR", "Player " + player + " has already placed the ships. Disqualified");
                 this.endGame();
             } else {
                 shipsChosen[player] = true;
-                placeShips(player, command);
+                placeShips(player, (ShipPlacementMove) move);
                 if (shipsChosen[0] && shipsChosen[1]) {
                     this.send("MOVE", "TURN " + currentPlayer);
                 } else {
@@ -48,7 +45,7 @@ public class BattleshipGame extends Game<List<Battleship>> {
             }
             return true;
         }
-        if (command.getParameter(2).equals("PLAY")) {
+        if (move instanceof GameMoveXY) {
             if (!shipsChosen[0] || !shipsChosen[1]) {
                 this.send("ERRR", "Player " + player + " is making a move before opponent have placed ships. Disqualified");
             }
@@ -56,7 +53,7 @@ public class BattleshipGame extends Game<List<Battleship>> {
                 this.send("ERRR", "Player " + player + " is not in turn to play. Disqualified");
                 this.endGame();
             } else {
-                boolean hit = makeMove(command.getFullCommand(), player, command.getParameterInt(3), command.getParameterInt(4));
+                boolean hit = makeMove((GameMoveXY) move, player);
                 if (!hit) {
                     currentPlayer = 1 - player;
                     this.send("MOVE", "TURN " + currentPlayer);
@@ -75,27 +72,27 @@ public class BattleshipGame extends Game<List<Battleship>> {
         return false;
     }
 
-    private boolean placeShips(int player, Command command) {
+    private boolean placeShips(int player, ShipPlacementMove placementMove) {
+        List<Battleship> placementShips = placementMove.getShips();
+        if (shipModels.size() != placementShips.size()) {
+            this.send("ERRR", "Player " + player + " has not the right amount of shipModels");
+            this.endGame();
+            return false;
+        }
+
         List<Battleship> yourShips = this.playerShips.get(player);
-        Iterator<Battleship> it = shipModels.iterator();
-        int i = 2;
+        ListIterator<Battleship> it = shipModels.listIterator();
         while (it.hasNext()) {
+            int idx = it.nextIndex();
             Battleship ship = it.next();
-            String name = command.getParameter(i + 1);
-            if (name.equals("")) {
-                this.send("ERRR", "Player " + player + " has not the right amount of shipModels");
-                this.endGame();
-                return false;
-            }
-            int width = command.getParameterInt(i + 2);
-            int height = command.getParameterInt(i + 3);
-            int x = command.getParameterInt(i + 4);
-            int y = command.getParameterInt(i + 5);
-            boolean correctUnflipped = ship.getWidth() == width && ship.getHeight() == height;
-            boolean correctFlipped = ship.getWidth() == height && ship.getHeight() == width;
-            System.out.printf("Received name %s, size %d x %d. Pos %d, %d.%n", name, width, height, x, y);
+
+            Battleship placed = placementShips.get(idx);
+            boolean correctUnflipped = ship.getWidth() == placed.getWidth() && ship.getHeight() == placed.getHeight();
+            boolean correctFlipped = ship.getWidth() == placed.getHeight() && ship.getHeight() == placed.getWidth();
+            System.out.printf("Received name %s, size %d x %d. Pos %d, %d.%n", placed.getName(), placed.getWidth(),
+                    placed.getHeight(), placed.getX(), placed.getY());
             System.out.println("flipped status: " + correctFlipped + ", " + correctUnflipped);
-            Battleship yourShip = ship.atPos(correctFlipped, x, y);
+            Battleship yourShip = ship.atPos(correctFlipped, placed.getX(), placed.getY());
             if (!correctFlipped && !correctUnflipped) {
                 this.send("ERRR", "Player " + player + " sent incorrect dimensions of ship: Expected " + ship + " but found " + yourShip);
                 this.endGame();
@@ -116,12 +113,11 @@ public class BattleshipGame extends Game<List<Battleship>> {
             }
 
             yourShips.add(yourShip);
-            i += 5;
         }
         return true;
     }
 
-    private boolean makeMove(String fullCommand, int player, int x, int y) {
+    private boolean makeMove(GameMoveXY moveXY, int player) {
         int opponent = 1 - player;
         List<Battleship> ships = playerShips.get(opponent);
         Stream<Battleship> sunkenShips = Stream.of();
@@ -129,19 +125,21 @@ public class BattleshipGame extends Game<List<Battleship>> {
         boolean hit = false;
         while (it.hasNext()) {
             Battleship ship = it.next();
-            hit = hit | ship.sink(x, y);
+            hit = hit | ship.sink(moveXY.getX(), moveXY.getY());
             if (!ship.isAlive()) {
                 sunkenShips = Stream.concat(sunkenShips, Stream.of(ship));
                 it.remove();
             }
         }
-        this.send(fullCommand + " " + player + " " + (hit ? "HIT" : "MISS"));
+        String str = String.format("%s %d %d %d", "MOVE", moveXY.getGameId(), moveXY.getX(), moveXY.getY());
+        this.send(str + " " + player + " " + (hit ? "HIT" : "MISS"));
         sunkenShips.forEach(ship -> send("MOVE", String.format(Locale.ENGLISH, "SINK %d %s %d %d %d %d", player,
                 ship.getName(), ship.getWidth(), ship.getHeight(), ship.getX(), ship.getY())));
 
         return hit;
     }
 
+    @Deprecated
     private void send(String type, String message) {
         send(type + " " + getId() + " " + message);
     }
@@ -158,7 +156,10 @@ public class BattleshipGame extends Game<List<Battleship>> {
 
     @Override
     public boolean playerCanMove(PlayerInGame<List<Battleship>> p) {
-        return false;
+        if (shipsChosen[0] && shipsChosen[1]) {
+            return currentPlayer == p.getIndex();
+        }
+        return !shipsChosen[p.getIndex()];
     }
 
     @Override

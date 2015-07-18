@@ -44,8 +44,19 @@ class TestClient {
 
     void expect(Class<? extends Message> clazz) {
         Message message = takeMessage()
+        assert message != NULL_MESSAGE : 'Received a string, not a message object'
         assert message : "Expected message of type $clazz but no message found"
         assert clazz.isAssignableFrom(message.class)
+    }
+
+    Message awaitUntil(Class<? extends Message> clazz) {
+        while (true) {
+            Message message = takeMessage()
+            assert message : "No more messages while waiting for $clazz"
+            if (clazz.isAssignableFrom(message.class)) {
+                return message
+            }
+        }
     }
 
     void awaitUntil(Predicate<Message> predicate) {
@@ -62,14 +73,14 @@ class TestClient {
 
     private Message takeMessage() {
         assert messages.size() == stringMessages.size()
-        def str = stringMessages.poll()
-        Message mess = messages.poll()
-        assert mess != NULL_MESSAGE : 'Received a string, not a message. Received string is ' + str
-        mess
+        assert !messages.isEmpty() : 'There are no more messages to take'
+        stringMessages.poll()
+        messages.poll()
     }
 
     private String takeString() {
         assert messages.size() == stringMessages.size()
+        assert !stringMessages.isEmpty() : 'There are no more messages to take'
         messages.poll()
         stringMessages.poll()
     }
@@ -79,13 +90,30 @@ class TestClient {
         assert stringMessages.isEmpty()
     }
 
-    @Deprecated
     void sentToServer(String message) {
         io.sentToServer(message)
     }
 
     void sentToServer(Message message) {
         io.sentToServer(message)
+    }
+
+    String getName() {
+        io.name
+    }
+
+    void expectStr(Predicate<String> predicate) {
+        def str = takeString()
+        assert predicate.test(str) : "Predicate did not match string $str"
+    }
+
+    void awaitUntilStr(Predicate<String> predicate) {
+        while (true) {
+            def str = takeString()
+            if (predicate.test(str)) {
+                return
+            }
+        }
     }
 
 }

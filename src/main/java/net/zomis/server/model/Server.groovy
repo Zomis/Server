@@ -1,6 +1,7 @@
 package net.zomis.server.model
 
 import net.zomis.server.games.GameMoveXY
+import net.zomis.server.games.battleship.ShipPlacementMove
 import net.zomis.server.messages.both.InviteRequest
 import net.zomis.server.messages.both.InviteResponse
 import net.zomis.server.messages.outgoing.ClientErrorMessage
@@ -54,6 +55,7 @@ public class Server {
         transformer.registerClass(InviteRequest.class);
         transformer.registerClass(InviteResponse.class);
         transformer.registerClass(GameMoveXY.class);
+        transformer.registerClass(ShipPlacementMove.class)
 
         CommandHandler incomings = server.getIncomingHandler();
         incomings.addHandler(LoginMessage.class, server.&loginRequest);
@@ -62,6 +64,7 @@ public class Server {
         incomings.addHandler(InviteResponse.class, server.&inviteResponse);
         incomings.addHandler(GameMove.class, server.&incomingGameCommand)
         incomings.addHandler(GameMoveXY.class, server.&incomingGameCommand)
+        incomings.addHandler(ShipPlacementMove.class, server.&incomingGameCommand)
 
         server.addGameFactory("UTTT", {serv, id -> new TTTGame(serv, id)});
         server.addGameFactory("Battleship", {serv, id -> new BattleshipGame(serv, id)});
