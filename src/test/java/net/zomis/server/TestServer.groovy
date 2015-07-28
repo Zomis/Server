@@ -2,6 +2,7 @@ package net.zomis.server
 
 import net.zomis.server.clients.ClientAI
 import net.zomis.server.clients.FakeClient
+import net.zomis.server.clients.TestClient
 import net.zomis.server.messages.LoginMessage
 import net.zomis.server.model.AI
 import net.zomis.server.model.Game

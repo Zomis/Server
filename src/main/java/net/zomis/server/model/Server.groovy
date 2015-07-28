@@ -1,5 +1,8 @@
 package net.zomis.server.model
 
+import net.zomis.server.clients.ClientAI
+import net.zomis.server.clients.FakeClient
+import net.zomis.server.clients.TestClient
 import net.zomis.server.games.GameMoveXY
 import net.zomis.server.games.battleship.ShipPlacementMove
 import net.zomis.server.messages.both.InviteRequest
@@ -232,6 +235,22 @@ public class Server {
     public void addConnections(ConnectionHandler handler) {
         handler.start();
         this.handlers.add(handler);
+    }
+
+    FakeClient createAI(String gameType, String name, AI<?> ai) {
+        def fakeClient = new FakeClient(this)
+        def client = new TestClient(this, fakeClient)
+        fakeClient.addConsumerString(client.&handleString)
+        fakeClient.addConsumer(client.&handleMessage)
+        this.newClient(fakeClient)
+
+        ClientAI clientAI = new ClientAI(this, fakeClient)
+        clientAI.gameType = gameType
+        clientAI.ai = ai
+        fakeClient.addConsumer(clientAI)
+
+        client.sentToServer(new LoginMessage(username: "#AI_${gameType}_${name}", password: "AI", client: "AI"))
+        fakeClient
     }
 
 }

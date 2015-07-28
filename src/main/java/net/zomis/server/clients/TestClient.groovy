@@ -1,6 +1,5 @@
-package net.zomis.server
+package net.zomis.server.clients
 
-import net.zomis.server.clients.ClientIO
 import net.zomis.server.messages.Message
 import net.zomis.server.messtransform.MessageTransformer
 import net.zomis.server.model.Server
