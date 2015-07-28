@@ -4,6 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import net.zomis.server.clients.ClientAI;
+import net.zomis.server.games.uttt.TTAIAdapter;
+import net.zomis.tttultimate.players.TTAI;
+import net.zomis.tttultimate.players.TTAIFactory;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -17,7 +21,12 @@ public class MainServer {
 			
 			server.addConnections(new ServerSock(server, 7282));
 			server.addConnections(new ServerWeb(server, 7283));
-			
+            server.createAI("UTTT", "Idiot", new TTAIAdapter(TTAIFactory.idiot().build()));
+            server.createAI("UTTT", "V2", new TTAIAdapter(TTAIFactory.version2().build()));
+            server.createAI("UTTT", "V3", new TTAIAdapter(TTAIFactory.version3().build()));
+            server.createAI("UTTT", "Imp3", new TTAIAdapter(TTAIFactory.improved3().build()));
+            server.createAI("UTTT", "Latest", new TTAIAdapter(TTAIFactory.best().build()));
+
 			logger.info("Starting Console...");
 			ServerConsole console = new ServerConsole(server);
 			new Thread(console, "Console-Thread").start();
