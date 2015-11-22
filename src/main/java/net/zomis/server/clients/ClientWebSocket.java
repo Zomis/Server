@@ -22,13 +22,13 @@ public class ClientWebSocket extends ClientIO {
 	
 	@Override
     @Deprecated
-	public void onSend(String message) {
+	public synchronized void onSend(String message) {
 		logger.info("Send to " + conn + ": " + message);
 		conn.send(message);
 	}
 
 	@Override
-    protected void onSend(Message data) {
+    protected synchronized void onSend(Message data) {
         transformer.transform(data, bytes -> conn.send(bytes), str -> conn.send(str));
     }
 
