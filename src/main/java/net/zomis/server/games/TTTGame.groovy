@@ -41,7 +41,13 @@ public class TTTGame extends Game<TTPlayer> {
 
         if (game.isGameOver()) {
             this.endGame();
-            logger.info("Replay is " + game.saveHistory());
+            String replay = game.saveHistory()
+            logger.info("Replay is " + replay)
+            String p1 = getPlayingPlayer(0).client.name
+            String p2 = getPlayingPlayer(1).client.name
+            new FileWriter("game-" + this.id + '-' + Math.random()).withCloseable {
+                write("$p1 vs $p2:\n$replay".toString())
+            }
         }
 
         return result;
